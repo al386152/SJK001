@@ -7,13 +7,13 @@ import time
 
 # Constantes:
 pos_centro = 320
-velocidad_recta = 5
+velocidad_recta = 20  # Parece que con 25 sería posible
 # Este tiene mucho peso cuando los cambios son bruscos
 peso_constante = 0.02 / velocidad_recta
 # Este tiene mucho peso cuando los cambios son medios
-peso_derivada = 0.0031 / velocidad_recta
+peso_derivada = 0.00315 / velocidad_recta
 # Este tiene mucho peso cuando los cambios son leves
-peso_integral = 0.000072 / velocidad_recta
+peso_integral = 0.0000719 / velocidad_recta
 
 
 def get_mask(min_range=(0, 125, 125), max_range=(30, 255, 255)):
@@ -63,7 +63,7 @@ def get_velocidades(cX, prev_error, acumulacion_error):
         acumulacion_error += error
         # Estado: línea a los lados.
         # Si es una curva, lo mejor es frenar
-        vel_lineal = velocidad_recta  # * (1 - (abs(error) / pos_centro))
+        vel_lineal = velocidad_recta * (1 - (abs(cX - pos_centro) / pos_centro))
         vel_angular = peso_constante * error + peso_derivada * diff_error + peso_integral * acumulacion_error
         if cX > pos_centro:
             # Estado: línea a la derecha
