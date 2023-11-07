@@ -7,12 +7,13 @@ import time
 
 # Constantes:
 pos_centro = 320
-velocidad_recta = 2
-peso_constante = 0.01 / velocidad_recta
-# Este tiene mucho peso cuando se va un poco
-peso_derivada = 0.002 / velocidad_recta
-# Este tiene mucho peso cuando se va mucho
-peso_integral = 0.00005 / velocidad_recta
+velocidad_recta = 5
+# Este tiene mucho peso cuando los cambios son bruscos
+peso_constante = 0.02 / velocidad_recta
+# Este tiene mucho peso cuando los cambios son medios
+peso_derivada = 0.0031 / velocidad_recta
+# Este tiene mucho peso cuando los cambios son leves
+peso_integral = 0.000072 / velocidad_recta
 
 
 def get_mask(min_range=(0, 125, 125), max_range=(30, 255, 255)):
@@ -47,11 +48,12 @@ def get_velocidades(cX, prev_error, acumulacion_error):
     error = pos_centro - cX
     diff_error = prev_error - error
     if cX == 0:
-        print("Línea a la perdida")
+        print("Línea perdida")
         vel_lineal = 0
         vel_angular = 0
         # vel_angular = (1 if prev_error < 0 else -1)
-    elif cX == pos_centro: # error == 0
+
+    elif cX == pos_centro:  # error == 0
         # Estado: línea delante.
         vel_lineal = velocidad_recta
         vel_angular = 0
@@ -61,7 +63,7 @@ def get_velocidades(cX, prev_error, acumulacion_error):
         acumulacion_error += error
         # Estado: línea a los lados.
         # Si es una curva, lo mejor es frenar
-        vel_lineal = velocidad_recta * (1 - (abs(error) / pos_centro))
+        vel_lineal = velocidad_recta  # * (1 - (abs(error) / pos_centro))
         vel_angular = peso_constante * error + peso_derivada * diff_error + peso_integral * acumulacion_error
         if cX > pos_centro:
             # Estado: línea a la derecha
@@ -86,11 +88,16 @@ rotacion = 0
 error = 0
 vel = velocidad_recta
 acumulacion_error = 0
+min_acumulacion = 0
+max_acumulacion = 0
 while True:
     red_mask = get_mask()
     cX, cY = get_centroids(get_momentums(red_mask))
 
     vel, rotacion, error, acumulacion_error = get_velocidades(cX, error, acumulacion_error)
+    min_acumulacion = min(min_acumulacion, acumulacion_error)
+    max_acumulacion = max(max_acumulacion, acumulacion_error)
+    print(f"min_acumulacion: {min_acumulacion}, max_acumulacion: {max_acumulacion} ")
 
     HAL.setV(vel)
     HAL.setW(rotacion)
