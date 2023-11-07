@@ -7,7 +7,7 @@ import time
 
 # Constantes:
 pos_centro = 320
-velocidad_recta = 6
+velocidad_recta = 3
 ajuste_error_inicial = 0.005
 
 
@@ -41,8 +41,9 @@ def get_velocidades(cX, prev_error, ajuste_error):
     # Si la línea está a la derecha vale más de 320
     # Si la línea está a la izquierda, vale menos de 320
     error = pos_centro - cX
-    #ajuste_error = (prev_error - error) * ajuste_error
-    ajuste_error = ajuste_error_inicial
+    ajuste_error = abs(prev_error - error) * ajuste_error
+    print(f"ajuste_error: {ajuste_error}")
+    #ajuste_error = ajuste_error_inicial
     if cX == 0:
         # Estado: Línea perdida.
         print("Línea a la perdida")
@@ -59,7 +60,7 @@ def get_velocidades(cX, prev_error, ajuste_error):
     else:
         # Estado: línea a los lados.
         # Si es una curva, lo mejor es frenar
-        vel_lineal = velocidad_recta * (1 - (error / pos_centro))
+        vel_lineal = velocidad_recta * (1 - ( abs(error) / pos_centro))
         vel_angular = error * ajuste_error
         if cX > pos_centro:
             # Estado: línea a la derecha
