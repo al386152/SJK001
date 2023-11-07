@@ -14,9 +14,10 @@ def get_mask(min_range=(0, 125, 125), max_range=(30, 255, 255)):
     red_mask = cv2.inRange(hsv, min_range, max_range)
     return red_mask
 
-
+# TODO: falla aquí cuando no detecta la línea en, por ejemplo, las curvas
+#   IndexError: tuple index out of range.
 def get_momentums(red_mask):
-    contours, hierarchy = cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     return cv2.moments(contours[0])
 
 
@@ -32,7 +33,7 @@ def get_centroids(M):
 
 # Estado de la lína (si está perdida, delante, etc.)
 pos_centro = 320
-velocidad_recta = 1
+velocidad_recta = 6
 
 
 def get_velocidades(cX, cX_anterior, velocidad_anterior):
@@ -58,8 +59,9 @@ def get_velocidades(cX, cX_anterior, velocidad_anterior):
         # Estado: línea a los lados.
         # Si es una curva, lo mejor es frenar
         # TODO: Los siguientes valores deberían ser en función
-        vel_lineal = velocidad_anterior * 0.1
-        vel_angular = 0.01 * (pos_centro - cX)
+        #vel_lineal = velocidad_anterior * 0.1
+        vel_lineal = velocidad_recta #* (cX - cX_anterior)
+        vel_angular = 0.01 * (cX_anterior - cX)
         if cX > pos_centro:
             # Estado: línea a la derecha
             print("Línea a la derecha")
@@ -87,5 +89,3 @@ while True:
     GUI.showImage(red_mask)
     print('%d, cX: %.2f cY: %.2f' % (i, cX, cY))
     i += 1
-
-
