@@ -7,12 +7,12 @@ import time
 
 # Constantes:
 pos_centro = 320
-velocidad_recta = 1
-peso_constante = 0.01
+velocidad_recta = 2
+peso_constante = 0.01 / velocidad_recta
 # Este tiene mucho peso cuando se va un poco
-peso_derivada = 0.002
+peso_derivada = 0.002 / velocidad_recta
 # Este tiene mucho peso cuando se va mucho
-peso_integral = 0.00005
+peso_integral = 0.00005 / velocidad_recta
 
 
 def get_mask(min_range=(0, 125, 125), max_range=(30, 255, 255)):
@@ -47,14 +47,12 @@ def get_velocidades(cX, prev_error, acumulacion_error):
     error = pos_centro - cX
     diff_error = prev_error - error
     if cX == 0:
-        """# Estado: Línea perdida.
         print("Línea a la perdida")
-
-        # Si se pierde la línea, gira hasta encontrarla otra vez.
-        vel_lineal = 0.5
-        vel_angular = (1 if prev_error < 0 else -1)"""
         vel_lineal = 0
         vel_angular = 0
+        # vel_angular = (1 if prev_error < 0 else -1)
+
+    elif cX == pos_centro: # error == 0
 
     elif cX == pos_centro: # error == 0
         # Estado: línea delante.
