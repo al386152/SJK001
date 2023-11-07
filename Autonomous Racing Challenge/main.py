@@ -7,8 +7,9 @@ import time
 
 # Constantes:
 pos_centro = 320
-velocidad_recta = 3
-ajuste_error_inicial = 0.005
+velocidad_recta = 10
+peso_constante = 0.01
+peso_variable = 0.01
 
 
 def get_mask(min_range=(0, 125, 125), max_range=(30, 255, 255)):
@@ -41,16 +42,15 @@ def get_velocidades(cX, prev_error, ajuste_error):
     # Si la línea está a la derecha vale más de 320
     # Si la línea está a la izquierda, vale menos de 320
     error = pos_centro - cX
-    ajuste_error = abs(prev_error - error) * ajuste_error
-    print(f"ajuste_error: {ajuste_error}")
-    #ajuste_error = ajuste_error_inicial
+    ajuste_error = (1 - abs(prev_error - error) / pos_centro) * ajuste_error
+    # ajuste_error = ajuste_error_inicial
     if cX == 0:
         # Estado: Línea perdida.
         print("Línea a la perdida")
 
         # Si se pierde la línea, gira hasta encontrarla otra vez.
         vel_lineal = 0.5
-        vel_angular = 1
+        vel_angular = (1 if prev_error < 0 else -1)
 
     elif cX == pos_centro:
         # Estado: línea delante.
@@ -60,8 +60,8 @@ def get_velocidades(cX, prev_error, ajuste_error):
     else:
         # Estado: línea a los lados.
         # Si es una curva, lo mejor es frenar
-        vel_lineal = velocidad_recta * (1 - ( abs(error) / pos_centro))
-        vel_angular = error * ajuste_error
+        vel_lineal = velocidad_recta * (1 - (abs(error) / pos_centro))
+        vel_angular = peso_constante * error + ajuste_error * error
         if cX > pos_centro:
             # Estado: línea a la derecha
             print("Línea a la derecha")
@@ -73,11 +73,18 @@ def get_velocidades(cX, prev_error, ajuste_error):
     return (vel_lineal, vel_angular, error, ajuste_error)
 
 
+def parar(t):
+    HAL.setV(0)
+    HAL.setW(0)
+
+    time.sleep(t)
+
+
 i = 0
 rotacion = 0
 error = 0
 vel = velocidad_recta
-ajuste_error = ajuste_error_inicial
+ajuste_error = peso_constante
 while True:
     red_mask = get_mask()
     cX, cY = get_centroids(get_momentums(red_mask))
@@ -86,12 +93,9 @@ while True:
 
     HAL.setV(vel)
     HAL.setW(rotacion)
-    """HAL.setV(0)
-    HAL.setW(0)
-
-    time.sleep(2)"""
 
     GUI.showImage(red_mask)
     print('%d, cX: %.2f cY: %.2f' % (i, cX, cY))
     i += 1
 
+    # if i % 20 == 0: parar(1)
