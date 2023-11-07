@@ -51,9 +51,6 @@ def get_velocidades(cX, prev_error, acumulacion_error):
         vel_lineal = 0
         vel_angular = 0
         # vel_angular = (1 if prev_error < 0 else -1)
-
-    elif cX == pos_centro: # error == 0
-
     elif cX == pos_centro: # error == 0
         # Estado: línea delante.
         vel_lineal = velocidad_recta
