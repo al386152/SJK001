@@ -10,13 +10,13 @@ pos_centro = 320
 velocidad_recta = 6  # Parece que con 25 sería posible
 # Este tiene mucho peso cuando los cambios son bruscos
 # peso_constante = 0.0021
-peso_constante = 0.002105
+peso_constante = 0.005
 # Este tiene mucho peso cuando los cambios son medios
 # peso_derivada = 0.00045
-peso_derivada = 0.0004505
+peso_derivada = 0.0004
 # Este tiene mucho peso cuando los cambios son leves
 # peso_integral = 0.00003
-peso_integral = 0.000005
+peso_integral = 0.000004
 
 
 def get_mask(min_range=(0, 125, 125), max_range=(30, 255, 255)):
