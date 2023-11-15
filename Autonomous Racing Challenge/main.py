@@ -16,7 +16,7 @@ peso_constante = 0.002105
 peso_derivada = 0.0004505
 # Este tiene mucho peso cuando los cambios son leves
 # peso_integral = 0.00003
-peso_integral = 0.00003
+peso_integral = 0.000005
 
 
 def get_mask(min_range=(0, 125, 125), max_range=(30, 255, 255)):
@@ -52,10 +52,12 @@ def get_velocidades(cX, prev_error, acumulacion_error):
     diff_error = prev_error - error
     if cX == 0:
         print("Línea perdida")
-        vel_angular = (-1 if error < 0 else 1)
-        vel_lineal = -1
-        diff_error = 0
-        acumulacion_error = 0
+        # vel_angular = (-1 if error < 0 else 1)
+        # vel_lineal = -1
+        vel_angular = 0
+        vel_lineal = 0
+        # diff_error = 0
+        # acumulacion_error = 0
 
     elif cX == pos_centro:  # error == 0
         # Estado: línea delante.
@@ -67,7 +69,7 @@ def get_velocidades(cX, prev_error, acumulacion_error):
         acumulacion_error += error
         # Estado: línea a los lados.
         # Si es una curva, lo mejor es frenar
-        vel_lineal = velocidad_recta * (1 - (abs(cX - pos_centro) / pos_centro))
+        vel_lineal = velocidad_recta  # * (1 - (abs(cX - pos_centro) / pos_centro))
         vel_angular = peso_constante * error + peso_derivada * diff_error + peso_integral * acumulacion_error
         if cX > pos_centro:
             # Estado: línea a la derecha
