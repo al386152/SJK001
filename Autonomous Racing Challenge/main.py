@@ -9,14 +9,14 @@ import time
 pos_centro = 320
 velocidad_recta = 6  # Parece que con 25 sería posible
 # Este tiene mucho peso cuando los cambios son bruscos
-# peso_constante = 0.0021
-peso_constante = 0.005
+# peso_constante = 0.005
+peso_constante = 0.003
 # Este tiene mucho peso cuando los cambios son medios
-# peso_derivada = 0.00045
-peso_derivada = 0.0004
-# Este tiene mucho peso cuando los cambios son leves
-# peso_integral = 0.00003
-peso_integral = 0.000004
+# peso_derivada = 0.0004
+peso_derivada = 0.0005
+# Este tiene mucho peso cuando está lejos de la línea.
+# peso_integral = 0.000004
+peso_integral = 0.000003
 
 
 def get_mask(min_range=(0, 125, 125), max_range=(30, 255, 255)):
@@ -50,19 +50,15 @@ def get_velocidades(cX, prev_error, acumulacion_error):
     # Si la línea está a la izquierda, vale menos de 320
     error = pos_centro - cX
     diff_error = prev_error - error
+
+    vel_angular = 0
     if cX == 0:
         print("Línea perdida")
-        # vel_angular = (-1 if error < 0 else 1)
-        # vel_lineal = -1
-        vel_angular = 0
         vel_lineal = 0
-        # diff_error = 0
-        # acumulacion_error = 0
 
     elif cX == pos_centro:  # error == 0
         # Estado: línea delante.
         vel_lineal = velocidad_recta
-        vel_angular = 0
         acumulacion_error = 0
         print("Línea delante")
     else:
@@ -78,7 +74,8 @@ def get_velocidades(cX, prev_error, acumulacion_error):
             # Estado: línea a la izquierda
             print("Línea a la izquierda")
 
-    print(f"vel_lineal: {vel_lineal}, vel_angular: {vel_angular}, acumulacion_error: {acumulacion_error}")
+    print(f"acumulacion_error: {acumulacion_error}, ff_error: {diff_error}")
+    print(f"error: {error}, vel_lineal: {vel_lineal}, vel_angular: {vel_angular}")
     return (vel_lineal, vel_angular, error, acumulacion_error)
 
 
