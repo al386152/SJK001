@@ -7,15 +7,14 @@ import time
 
 # Constantes:
 pos_centro = 320
-velocidad_recta = 5  # Parece que con 25 sería posible
+velocidad_recta = 6  # Parece que con 25 sería posible
 # Este tiene mucho peso cuando los cambios son bruscos
 # peso_constante = 0.0021
 peso_constante = 0.002105
 # Este tiene mucho peso cuando los cambios son medios
 # peso_derivada = 0.00045
-peso_derivada = 0.00043
+peso_derivada = 0.0004505
 # Este tiene mucho peso cuando los cambios son leves
-
 # peso_integral = 0.00003
 peso_integral = 0.00003
 
@@ -53,9 +52,10 @@ def get_velocidades(cX, prev_error, acumulacion_error):
     diff_error = prev_error - error
     if cX == 0:
         print("Línea perdida")
-        vel_lineal = 0
-        vel_angular = 0
-        # vel_angular = (1 if prev_error < 0 else -1)
+        vel_angular = (-1 if error < 0 else 1)
+        vel_lineal = -1
+        diff_error = 0
+        acumulacion_error = 0
 
     elif cX == pos_centro:  # error == 0
         # Estado: línea delante.
