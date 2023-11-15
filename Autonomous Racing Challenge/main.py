@@ -16,8 +16,8 @@ peso_constante = 0.002105
 peso_derivada = 0.00043
 # Este tiene mucho peso cuando los cambios son leves
 
-# peso_integral = 0.000027
-peso_integral = 0.000027
+# peso_integral = 0.00003
+peso_integral = 0.00003
 
 
 def get_mask(min_range=(0, 125, 125), max_range=(30, 255, 255)):
