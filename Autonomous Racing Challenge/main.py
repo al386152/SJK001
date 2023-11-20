@@ -7,16 +7,16 @@ import time
 
 # Constantes:
 pos_centro = 320
-velocidad_recta = 6  # Parece que con 25 sería posible
+velocidad_recta = 4  # Parece que con 25 sería posible
 # Este tiene mucho peso cuando los cambios son bruscos
 # peso_constante = 0.005
 peso_constante = 0.003
 # Este tiene mucho peso cuando los cambios son medios
 # peso_derivada = 0.0004
-peso_derivada = 0.0005
+peso_derivada = 0.0004
 # Este tiene mucho peso cuando está lejos de la línea.
 # peso_integral = 0.000004
-peso_integral = 0.000003
+peso_integral = 0.000004
 
 
 def get_mask(min_range=(0, 125, 125), max_range=(30, 255, 255)):
@@ -45,7 +45,7 @@ def get_centroids(M):
     return cX, cY
 
 
-def get_velocidades(cX, prev_error, acumulacion_error):
+def get_velocidades(cX, prev_error, acumulacion_error, rotacion):
     # Si la línea está a la derecha vale más de 320
     # Si la línea está a la izquierda, vale menos de 320
     error = pos_centro - cX
@@ -54,7 +54,8 @@ def get_velocidades(cX, prev_error, acumulacion_error):
     vel_angular = 0
     if cX == 0:
         print("Línea perdida")
-        vel_lineal = 0
+        vel_lineal = velocidad_recta
+        vel_angular = rotacion
 
     elif cX == pos_centro:  # error == 0
         # Estado: línea delante.
@@ -97,7 +98,7 @@ while True:
     red_mask = get_mask()
     cX, cY = get_centroids(get_momentums(red_mask))
 
-    vel, rotacion, error, acumulacion_error = get_velocidades(cX, error, acumulacion_error)
+    vel, rotacion, error, acumulacion_error = get_velocidades(cX, error, acumulacion_error, rotacion)
     min_acumulacion = min(min_acumulacion, acumulacion_error)
     max_acumulacion = max(max_acumulacion, acumulacion_error)
     print(f"min_acumulacion: {min_acumulacion}, max_acumulacion: {max_acumulacion} ")
