@@ -54,34 +54,55 @@ def mover_posicion_respecto_barco(x, y, z, yaw):
     HAL.set_cmd_pos(x, y, z, yaw)
 
 
-def parar(t):
+def esperar(t):
     time.sleep(t)
 
 
+def parar():
+    HAL.set_cmd_vel(0, 0, 0, 0)
+
+
+def despega():
+    HAL.takeoff(10)
+
+
 def print_state():
+    print("1")
     print(f"get_position: {HAL.get_position()}")
-    print(f"get_velocity: {HAL.get_velocity()}")
-    print(f"get_yaw_rate: {HAL.get_yaw_rate()}")
+    print("2")
+
+    # print(f"get_velocity: {HAL.get_velocity()}") # Parece que no va bien al iniciar.
+    print("3")
+    # print(f"get_yaw_rate: {HAL.get_yaw_rate()}") # Parece que no va bien al iniciar.
+    print("4")
     print(f"get_orientation: {HAL.get_orientation()}")
+    print("5")
     print(f"get_roll: {HAL.get_roll()}")
+    print("6")
     print(f"get_pitch: {HAL.get_pitch()}")
+    print("7")
     print(f"get_yaw: {HAL.get_yaw()}")
+    print("8")
     print(f"get_landed_state: {HAL.get_landed_state()}")
     print("-----")
 
 
-i = 0
+# print_state()
+despega()
 while True:
     frontal = get_frontal_image()
     ventral = get_ventral_image()
 
+    mover_posicion_respecto_barco(35, -35, 10, 0)
     print_state()
-    # HAL.takeoff(1)
-    mover_posicion_respecto_barco(0, 0, 10, 0)
     # mover_posicion_respecto_barco(1, 2, 5, 0)
+    # esperar(2)
+    # print(f"get_position: {HAL.get_position()}")
+    # HAL.set_cmd_vel(10, 10, 10, 10)
+    # print(f"get_position: {HAL.get_position()}")
 
     # GUI.showImage(get_green_mask(frontal))
     GUI.showLeftImage(get_blue_mask(ventral))
-    GUI.showImage(get_blue_mask(ventral))
+    GUI.showImage(get_blue_mask(frontal))
     # GUI.showLeftImage(ventral)
 
