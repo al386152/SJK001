@@ -53,6 +53,8 @@ def get_centroids(M):
 def mover_posicion_respecto_barco(x, y, z, yaw):
     HAL.set_cmd_pos(x, y, z, yaw)
 
+def moverse_a_la_zona_del_rescate():
+    mover_posicion_respecto_barco(35, -35, 10, 0)
 
 def esperar(t):
     time.sleep(t)
@@ -67,22 +69,13 @@ def despega():
 
 
 def print_state():
-    print("1")
     print(f"get_position: {HAL.get_position()}")
-    print("2")
-
-    # print(f"get_velocity: {HAL.get_velocity()}") # Parece que no va bien al iniciar.
-    print("3")
-    # print(f"get_yaw_rate: {HAL.get_yaw_rate()}") # Parece que no va bien al iniciar.
-    print("4")
+    #print(f"get_velocity: {HAL.get_velocity()}") # Parece que no va bien, al menos al iniciar.
+    #print(f"get_yaw_rate: {HAL.get_yaw_rate()}") # Parece que no va bien, al menos al iniciar.
     print(f"get_orientation: {HAL.get_orientation()}")
-    print("5")
     print(f"get_roll: {HAL.get_roll()}")
-    print("6")
     print(f"get_pitch: {HAL.get_pitch()}")
-    print("7")
     print(f"get_yaw: {HAL.get_yaw()}")
-    print("8")
     print(f"get_landed_state: {HAL.get_landed_state()}")
     print("-----")
 
@@ -93,7 +86,7 @@ while True:
     frontal = get_frontal_image()
     ventral = get_ventral_image()
 
-    mover_posicion_respecto_barco(35, -35, 10, 0)
+    moverse_a_la_zona_del_rescate()
     print_state()
     # mover_posicion_respecto_barco(1, 2, 5, 0)
     # esperar(2)
