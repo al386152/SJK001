@@ -94,8 +94,11 @@ while True:
     # HAL.set_cmd_vel(10, 10, 10, 10)
     # print(f"get_position: {HAL.get_position()}")
 
+    print(f"get_blue_mask: {get_blue_mask(ventral)}")
+    print(f"not get_blue_mask: {~get_blue_mask(ventral)}")
+
     # GUI.showImage(get_green_mask(frontal))
-    GUI.showLeftImage(get_blue_mask(ventral))
     GUI.showImage(get_blue_mask(frontal))
+    GUI.showLeftImage(get_blue_mask(ventral))
     # GUI.showLeftImage(ventral)
 
