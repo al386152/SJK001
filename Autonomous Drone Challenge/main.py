@@ -7,7 +7,7 @@ import time
 
 # Constantes:
 NUM_NAUFRAGOS = 6
-ALTURA_VUELO = 10
+ALTURA_VUELO = 25
 X_RESCATE = 35
 Y_RESCATE = -35
 
@@ -35,29 +35,19 @@ def get_blue_mask(img):
 def get_not_blue_mask(img):
     return ~get_blue_mask(img)
 
-def get_momentums(red_mask):
+def get_bounding_boxes(mask):
     try:
-        contours, _ = cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        return cv2.moments(contours[0])
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        return [cv2.minAreaRect(contour) for contour in contours]
     except:
         return None
-
-
-def get_centroids(M):
-    cX, cY = 0, 0
-
-    if M and M["m00"] != 0:
-        cX = M["m10"] / M["m00"]
-        cY = M["m01"] / M["m00"]
-
-    return cX, cY
 
 def mover_posicion_respecto_barco(x, y, z, yaw):
     HAL.set_cmd_pos(x, y, z, yaw)
 
 def moverse_a_la_zona_del_rescate():
     # Posición obtenida de forma heurística
-    mover_posicion_respecto_barco(X_RESCATE, -Y_RESCATE, ALTURA_VUELO, 0)
+    mover_posicion_respecto_barco(X_RESCATE, Y_RESCATE, ALTURA_VUELO, 0)
 
 def check(pos_a, pos_b, error = 0.5):
     return abs(pos_a - pos_b) < error
@@ -111,17 +101,7 @@ def vueltas_en_cuadrados(avanze = 1, pseudo_radio = 1, pos_actual = HAL.get_posi
     x, y, z = pos_actual
     # La idea es, avanzamos un poco, damos una vuelta, avanzamos otro poco, damos otra vuelta
     mover_posicion_respecto_barco(x, y + avanze, z, 0)
-
-
     mover_posicion_respecto_barco(x, y + pseudo_radio, z, 0)
-
-
-def escanar_cara():
-    cara = None
-    return cara
-
-def naufrago_encontrado():
-    return False
 
 def esperar(t):
     time.sleep(t)
@@ -150,9 +130,10 @@ def print_state():
 
 def mostrar_imagen_ventral_como_yo_quiero():
     ventral = get_ventral_image()
+    mask = get_not_blue_mask(ventral)
     GUI.showImage(ventral)
-    GUI.showLeftImage(get_not_blue_mask(ventral))
-    return ventral
+    GUI.showLeftImage(mask)
+    return ventral, mask
 
 
 print_state()
@@ -165,8 +146,13 @@ while not is_in_position(X_RESCATE, Y_RESCATE, ALTURA_VUELO):
     moverse_a_la_zona_del_rescate()
     print_state()
 
+while True:
+    img, mask = mostrar_imagen_ventral_como_yo_quiero()
+    print(get_bounding_boxes(mask))
+    esperar(5)
+
 caras_naufragos = set()
 num_rescatados = 0
-while num_rescatados < NUM_NAUFRAGOS:
+#while num_rescatados < NUM_NAUFRAGOS:
 
 
