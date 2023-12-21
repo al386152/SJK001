@@ -8,8 +8,8 @@ import time
 # Constantes:
 NUM_NAUFRAGOS = 6
 ALTURA_VUELO = 25
-ALTURA_RAS_DEL_AGUA = 0.5
-ALTURA_SEGUNDA_FOTO = 2
+ALTURA_RAS_DEL_AGUA = 2
+ALTURA_SEGUNDA_FOTO = 5
 X_RESCATE = 35
 Y_RESCATE = -35
 # Obtenida de forma euristica (imagen.shape)
@@ -114,6 +114,7 @@ def print_state():
     print("-----")
 
 def get_posiciones_naufragos(mask):
+    print("Consiguiendo las posiciones de los naufragos")
     posiciones = list()
     for tup_centro_x_y, tup_width_height, angle in get_bounding_boxes(mask):
         x, y = tup_centro_x_y
@@ -150,6 +151,8 @@ def ir_al_naufrago(pos):
         mostrar_imagen_ventral_como_yo_quiero()
         mover_posicion_respecto_barco(x, y, ALTURA_SEGUNDA_FOTO, yaw)
         print_state()
+        print("Yendo al náufrago")
+    print("Corrigiendo la posición")
     # Tratamos de corregir la dirección
     parar()
     # Si detecta varias posiciones, a la que vamos será la más cercana
@@ -160,12 +163,14 @@ def ir_al_naufrago(pos):
         mostrar_imagen_ventral_como_yo_quiero()
         mover_posicion_respecto_barco(x, y, ALTURA_RAS_DEL_AGUA, yaw)
         print_state()
+        print("Yendo al náufrago (dir. corregida)")
 
 def ir_al_otro_extremo_del_naufrago():
-    HAL.set_cmd_vel(0.5, 0, 0, 0)
     im, mask = mostrar_imagen_ventral_como_yo_quiero()
     cara = reconocer_cara(im)
     while len(cara) == 0:
+        print("yendo al otro extremo del naufrago")
+        print_state()
         cara = reconocer_cara(im)
     parar()
     return cara
@@ -178,24 +183,30 @@ while not is_in_position(X_RESCATE, Y_RESCATE, ALTURA_VUELO):
     mostrar_imagen_ventral_como_yo_quiero()
     moverse_a_la_zona_del_rescate()
     print_state()
+    print("-- Yendo a la zona del naufragio --")
 
+print("-- Zona del naufragio alcanzada --")
 pos_momento_captura = HAL.get_position()
 img, mask = mostrar_imagen_ventral_como_yo_quiero()
 # Desde esta posición, podemos ver todos los naufragos (si no, habría que hacer un poco más de exploración).
 posiciones_naufragos = pixels_a_coordenadas_aprox(get_posiciones_naufragos(mask), pos_momento_captura)
 
+print("Recogiendo a los naufragos")
 naufragos = dict()
 i = 0
 while len(naufragos) < NUM_NAUFRAGOS:
+    print(f"Naufragos recogidos: {len(naufragos)}/{NUM_NAUFRAGOS}")
     pos = posiciones_naufragos[i]
     ir_al_naufrago(pos)
     im, mask = mostrar_imagen_ventral_como_yo_quiero()
     cara = reconocer_cara(im)
     if len(cara) != 0:
+        print("Cara reconocida")
         # if cara not in naufragos: # Por como lo estamos haciendo, no debería repetirse.
         naufragos[pos] = cara
         i += 1
     else:
+        print("Cara no reconocida")
         # No se si así la idea es buena
         naufragos[pos] = ir_al_otro_extremo_del_naufrago()
         i += 1
