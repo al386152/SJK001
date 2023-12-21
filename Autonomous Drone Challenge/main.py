@@ -8,9 +8,14 @@ import time
 # Constantes:
 NUM_NAUFRAGOS = 6
 ALTURA_VUELO = 25
+ALTURA_RAS_DEL_AGUA = 0.5
+ALTURA_SEGUNDA_FOTO = 2
 X_RESCATE = 35
 Y_RESCATE = -35
-FORMA_IMAGEN = (240, 320) #, 3) # Obtenida de forma euristica
+# Obtenida de forma euristica (imagen.shape)
+ANCHURA_IMAGEN = 320
+ALTURA_IMAGEN = 240
+
 
 def get_frontal_image():
     return HAL.get_frontal_image()
@@ -64,20 +69,23 @@ def is_in_position(x, y, z, error=0.5):
     pos_x, pos_y, pos_z = HAL.get_position()
     return (x is None or check(pos_x, x, error)) and (y is None or check(pos_y, y, error)) and (z is None or check(pos_z, z, error))
 
+
 def reconocer_cara(src):
     # Si se reconoce la car
     gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
 
     # Load pre-trained classifiers
     faceCascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-    #eyeCascade = cv2.CascadeClassifier('haarcascade_eye.xml')
+    # eyeCascade = cv2.CascadeClassifier('haarcascade_eye.xml')
 
+    faces = list()
     # Detect faces
-    faces = faceCascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3, minSize=(0, 0))
+    try:
+        faces = faceCascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=3, minSize=(0, 0))
 
-    # for (x, y, w, h) in faces:
-        #roi_gray = gray[y:y + h, x:x + w]
-        #roi_src = src[y:y + h, x:x + w]
+        # for (x, y, w, h) in faces:
+        # roi_gray = gray[y:y + h, x:x + w]
+        # roi_src = src[y:y + h, x:x + w]
 
         # Draw rectangle around face
         # cv2.rectangle(src, (x, y), (x + w, y + h), (255, 0, 0), 2)
@@ -86,7 +94,8 @@ def reconocer_cara(src):
         # for (ex, ey, ew, eh) in eyes:
         #     # Draw rectangle around eyes
         #     cv2.rectangle(roi_src, (ex, ey), (ex + ew, ey + eh), (0, 0, 255), 2)
-    return faces
+    finally:
+        return faces
 
 def esperar(t):
     time.sleep(t)
@@ -118,16 +127,49 @@ def mostrar_imagen_ventral_como_yo_quiero():
     GUI.showLeftImage(mask)
     return ventral, mask
 
+# Sacado un poco de internet
+#principal_point_x, principal_point_y = (ANCHURA_IMAGEN / 2, ALTURA_IMAGEN / 2)
+def pixels_to_cartesian(pixels, principal_point, depth = ALTURA_VUELO, focal_length = 500):
+    cartesian = ((pixels - principal_point) / focal_length) * depth
+    return cartesian
 
-def datos_normalizados(l):
-    minim = min(l)
-    maxim = max(l)
-    dif = maxim - minim
+def pixels_a_coordenadas_aprox(posiciones, pos_momento_captura = HAL.get_position()):
 
-    return [(2 * ((v - minim) / dif) - 1) for v in l]
+    coordenadas = list()
+    pos_x, pos_y, _ = pos_momento_captura
+    for x, y, yaw in posiciones:
+        x = pixels_to_cartesian(x, ANCHURA_IMAGEN / 2)
+        y = pixels_to_cartesian(y, ALTURA_IMAGEN / 2)
+        coordenadas.append( (pos_x + x, pos_y + y, yaw) )
+    return coordenadas
 
 def ir_al_naufrago(pos):
-    pass
+    x, y, yaw = pos
+    # Nos movemos a ras del agua
+    while not is_in_position(x, y, ALTURA_SEGUNDA_FOTO):
+        mostrar_imagen_ventral_como_yo_quiero()
+        mover_posicion_respecto_barco(x, y, ALTURA_SEGUNDA_FOTO, yaw)
+        print_state()
+    # Tratamos de corregir la dirección
+    parar()
+    # Si detecta varias posiciones, a la que vamos será la más cercana
+    _p = sorted(get_posiciones_naufragos(mask), key=lambda coord: (coord[0] ** 2 + coord[1] ** 2)**2)
+    posiciones = pixels_a_coordenadas_aprox(_p)
+    x, y, yaw = posiciones[0]
+    while not is_in_position(x, y, ALTURA_RAS_DEL_AGUA):
+        mostrar_imagen_ventral_como_yo_quiero()
+        mover_posicion_respecto_barco(x, y, ALTURA_RAS_DEL_AGUA, yaw)
+        print_state()
+
+def ir_al_otro_extremo_del_naufrago():
+    HAL.set_cmd_vel(0.5, 0, 0, 0)
+    im, mask = mostrar_imagen_ventral_como_yo_quiero()
+    cara = reconocer_cara(im)
+    while len(cara) == 0:
+        cara = reconocer_cara(im)
+    parar()
+    return cara
+
 
 print_state()
 despega()
@@ -139,27 +181,26 @@ while not is_in_position(X_RESCATE, Y_RESCATE, ALTURA_VUELO):
 
 pos_momento_captura = HAL.get_position()
 img, mask = mostrar_imagen_ventral_como_yo_quiero()
-print(get_posiciones_naufragos(mask))
-x, y, z, yaw = pos_momento_captura
+# Desde esta posición, podemos ver todos los naufragos (si no, habría que hacer un poco más de exploración).
+posiciones_naufragos = pixels_a_coordenadas_aprox(get_posiciones_naufragos(mask), pos_momento_captura)
 
-while not is_in_position(x + 1, y, z, error=0):
-    mover_posicion_respecto_barco(x + 1, y, z, 0)
-    print_state()
-img, mask = mostrar_imagen_ventral_como_yo_quiero()
-print(get_posiciones_naufragos(mask))
-
-
-
-# Luego, no paramos de buscar los naufragos hasta que no los hayamos encontrado todos
-
-#dict_naufragos = dict()
-#num_rescatados = 0
-#while num_rescatados < NUM_NAUFRAGOS:
-#    img, mask = mostrar_imagen_ventral_como_yo_quiero()
-#    pos = get_posiciones_naufragos(mask)
-    # Como no sé bien cómo transormar de píxeles a metros teniendo en cuenta la perspectiva
-    #  El plan es que se mueva en una dirección hasta que esté justo encima.
+naufragos = dict()
+i = 0
+while len(naufragos) < NUM_NAUFRAGOS:
+    pos = posiciones_naufragos[i]
+    ir_al_naufrago(pos)
+    im, mask = mostrar_imagen_ventral_como_yo_quiero()
+    cara = reconocer_cara(im)
+    if len(cara) != 0:
+        # if cara not in naufragos: # Por como lo estamos haciendo, no debería repetirse.
+        naufragos[pos] = cara
+        i += 1
+    else:
+        # No se si así la idea es buena
+        naufragos[pos] = ir_al_otro_extremo_del_naufrago()
+        i += 1
 
 
-
-
+# Creo que es necesario meter un "while True"
+while True:
+    mostrar_imagen_ventral_como_yo_quiero()
