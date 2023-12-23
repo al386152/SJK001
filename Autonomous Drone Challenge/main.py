@@ -16,6 +16,9 @@ Y_RESCATE = -35
 ANCHURA_IMAGEN = 320
 ALTURA_IMAGEN = 240
 
+POS_CENTRO_X = ANCHURA_IMAGEN
+POS_CENTRO_Y = ALTURA_IMAGEN
+
 
 def get_frontal_image():
     return HAL.get_frontal_image()
@@ -47,6 +50,42 @@ def get_bounding_boxes(mask):
 
 def mover_posicion_respecto_barco(x, y, z, yaw):
     HAL.set_cmd_pos(x, y, z, yaw)
+
+def get_momentums(mask):
+    try:
+        contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        return cv2.moments(contours[0])
+    except:
+        return None
+
+def get_centroids(M):
+    cX, cY = 0, 0
+
+    if M and M["m00"] != 0:
+        cX = M["m10"] / M["m00"]
+        cY = M["m01"] / M["m00"]
+
+    return cX, cY
+
+
+def centrarse_en_naufrago():
+    error_x = -1
+    error_y = -1
+    while error_x == 0:
+        print("centrarse_en_naufrago - EJE X")
+        _, mask = mostrar_imagen_ventral_como_yo_quiero()
+        cX, cY = get_centroids(get_momentums(mask))
+        error_x = POS_CENTRO_X - cX
+        moverse_en_cierta_direccion(error_x)
+        print_state()
+
+    while error_y == 0:
+        _, mask = mostrar_imagen_ventral_como_yo_quiero()
+        print("centrarse_en_naufrago - EJE Y")
+        print_state()
+        cX, cY = get_centroids(get_momentums(mask))
+        error_y = POS_CENTRO_Y - cY
+        moverse_en_cierta_direccion(error_y)
 
 def moverse_a_la_zona_del_rescate():
     # Posición obtenida de forma heurística
@@ -103,7 +142,9 @@ def esperar(t):
     print(f"Esperando {t} segundos")
     time.sleep(t)
 def parar():
-    HAL.set_cmd_vel(0, 0, 0, 0)
+    x, y, z = HAL.get_position()
+    mover_posicion_respecto_barco(x, y, z, HAL.get_yaw())
+
 def despega():
     HAL.takeoff(ALTURA_VUELO)
 
@@ -152,14 +193,20 @@ def ir_al_naufrago(pos):
     # Nos movemos a ras del agua
     while not is_in_position(x, y, ALTURA_SEGUNDA_FOTO):
         mostrar_imagen_ventral_como_yo_quiero()
-        mover_posicion_respecto_barco(x, y, ALTURA_SEGUNDA_FOTO, yaw)
+        mover_posicion_respecto_barco(x, y, ALTURA_SEGUNDA_FOTO, 0)
         print_state()
         print("Yendo al náufrago")
 
+    esperar(10)
 
     print("Corrigiendo la posición")
     # Tratamos de corregir la dirección
     parar()
+
+    centrarse_en_naufrago()
+
+
+    """
     _, mask = mostrar_imagen_ventral_como_yo_quiero()
     # Si detecta varias posiciones, a la que vamos será la más cercana
     _p = sorted(get_posiciones_naufragos(mask), key=lambda coord: (coord[0] ** 2 + coord[1] ** 2) ** 2)
@@ -176,12 +223,15 @@ def ir_al_naufrago(pos):
         #posiciones = pixels_a_coordenadas_aprox(_p)
         #if len(posiciones) != 0:
         #    x, y, yaw = posiciones[0]
+    """
 
     parar()
-    while not is_in_the_correct_yaw(yaw):
-        print("Poniéndose en la rotación correcta")
+    while not is_in_the_correct_yaw(yaw, error= 0.5):
+        print(f"Poniéndose en la rotación correcta: {yaw}")
         mostrar_imagen_ventral_como_yo_quiero()
-        moverse_en_cierta_direccion(vyaw=(HAL.get_yaw() - yaw))
+        x, y, z = HAL.get_position()
+        mover_posicion_respecto_barco(x, y, z, yaw)
+        print_state()
     parar()
 
     x, y, _ = HAL.get_position()
@@ -191,7 +241,10 @@ def ir_al_naufrago(pos):
         mostrar_imagen_ventral_como_yo_quiero()
         mover_posicion_respecto_barco(x, y, ALTURA_RAS_DEL_AGUA, yaw)
 
-
+    print("Está en la posición")
+    print_state()
+    parar()
+    esperar(10)
 
 def ir_al_otro_extremo_del_naufrago():
     im, mask = mostrar_imagen_ventral_como_yo_quiero()
