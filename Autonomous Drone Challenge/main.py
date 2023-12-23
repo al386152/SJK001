@@ -69,6 +69,8 @@ def is_in_position(x, y, z, error=0.5):
     pos_x, pos_y, pos_z = HAL.get_position()
     return (x is None or check(pos_x, x, error)) and (y is None or check(pos_y, y, error)) and (z is None or check(pos_z, z, error))
 
+def is_in_the_correct_yaw(yaw, error = 0.5):
+    return check(HAL.get_yaw(), yaw, error)
 
 def reconocer_cara(src):
     # Si se reconoce la car
@@ -154,37 +156,57 @@ def ir_al_naufrago(pos):
         print_state()
         print("Yendo al náufrago")
 
-    while not is_in_position(x=None, y=None, z=ALTURA_RAS_DEL_AGUA):
-        print("Corrigiendo la posición")
-        # Tratamos de corregir la dirección
-        parar()
-        _, mask = mostrar_imagen_ventral_como_yo_quiero()
-        # Si detecta varias posiciones, a la que vamos será la más cercana
-        _p = sorted(get_posiciones_naufragos(mask), key=lambda coord: (coord[0] ** 2 + coord[1] ** 2) ** 2)
-        posiciones = pixels_a_coordenadas_aprox(_p)
-        x, y, yaw = posiciones[0]
-        while not is_in_position(x, y, None):
-            _, mask = mostrar_imagen_ventral_como_yo_quiero()
-            _p = sorted(get_posiciones_naufragos(mask), key=lambda coord: (coord[0] ** 2 + coord[1] ** 2) ** 2)
-            posiciones = pixels_a_coordenadas_aprox(_p)
-            x, y, yaw = posiciones[0]
 
-            mover_posicion_respecto_barco(x, y, ALTURA_RAS_DEL_AGUA, yaw)
-            print_state()
-            print("Yendo al náufrago (dir. corregida)")
+    print("Corrigiendo la posición")
+    # Tratamos de corregir la dirección
+    parar()
+    _, mask = mostrar_imagen_ventral_como_yo_quiero()
+    # Si detecta varias posiciones, a la que vamos será la más cercana
+    _p = sorted(get_posiciones_naufragos(mask), key=lambda coord: (coord[0] ** 2 + coord[1] ** 2) ** 2)
+    posiciones = pixels_a_coordenadas_aprox(_p)
+    x, y, yaw = posiciones[0]
+    _x, _y, _z = HAL.get_position()
+    moverse_en_cierta_direccion(x-_x, y-_y)
+    parar()
+    while not is_in_position(x, y, None):
+        print("Yendo al náufrago (dir. corregida)")
+        print_state()
+        _, mask = mostrar_imagen_ventral_como_yo_quiero()
+        #_p = sorted(get_posiciones_naufragos(mask), key=lambda coord: (coord[0] ** 2 + coord[1] ** 2) ** 2)
+        #posiciones = pixels_a_coordenadas_aprox(_p)
+        #if len(posiciones) != 0:
+        #    x, y, yaw = posiciones[0]
+
+    parar()
+    while not is_in_the_correct_yaw(yaw):
+        print("Poniéndose en la rotación correcta")
+        mostrar_imagen_ventral_como_yo_quiero()
+        moverse_en_cierta_direccion(vyaw=(HAL.get_yaw() - yaw))
+    parar()
+
+    x, y, _ = HAL.get_position()
+    while not is_in_position(x, y, ALTURA_RAS_DEL_AGUA):
+        print("Bajando a ras del agua")
+        print_state()
+        mostrar_imagen_ventral_como_yo_quiero()
+        mover_posicion_respecto_barco(x, y, ALTURA_RAS_DEL_AGUA, yaw)
+
+
 
 def ir_al_otro_extremo_del_naufrago():
     im, mask = mostrar_imagen_ventral_como_yo_quiero()
     cara = reconocer_cara(im)
+    vx, vy, _ = HAL.get_velocity()
     while len(cara) == 0:
-        print("yendo al otro extremo del naufrago")
+        print(f"Yendo al otro extremo del naufrago | vx: {vx}, vy: {vy} ")
+        moverse_en_cierta_direccion(vx=vx, vy=vy, vz=None, vyaw=None)
         print_state()
         cara = reconocer_cara(im)
     parar()
     return cara
 
 
-def test():
+def test_movimiento():
     mostrar_imagen_ventral_como_yo_quiero()
     mover_posicion_respecto_barco(15, -15, 5, 0)
     print(f"test: {HAL.get_position()}")
@@ -194,15 +216,11 @@ def test():
     while not is_in_position(X_RESCATE, Y_RESCATE, ALTURA_VUELO, error=1):
         print("test")
         mostrar_imagen_ventral_como_yo_quiero()
-        moverse_en_cierta_direccion(vx=2, vy=-2, vz=2, vyaw=None)
+        moverse_en_cierta_direccion(vx=2, vy=-2, vz=0.5, vyaw=None)
         print(f"test: {HAL.get_position()}")
 
 print_state()
 despega()
-
-print("PATATA")
-test()
-print("POST_PATATA")
 
 # Primero vamos al sitio
 while not is_in_position(X_RESCATE, Y_RESCATE, ALTURA_VUELO):
