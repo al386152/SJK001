@@ -78,7 +78,18 @@ def centrarse_en_naufrago(mult=0.01):
         cX, cY = get_centroids(get_momentums(mask))
         print(f"cX: {cX}, cY: {cY} ")
 
-        error_x = (POS_CENTRO_X - cX) * mult
+        error_x = (POS_CENTRO_X - 32 - cX) * mult
+        print(f"error_x: {error_x}")
+        moverse_en_cierta_direccion(error_x)
+        print_state()
+
+    while error_x >= 0.5:
+        print("centrarse_en_naufrago - EJE X")
+        _, mask = mostrar_imagen_ventral_como_yo_quiero()
+        cX, cY = get_centroids(get_momentums(mask))
+        print(f"cX: {cX}, cY: {cY} ")
+
+        error_x = (POS_CENTRO_X + 32 - cX) * mult
         print(f"error_x: {error_x}")
         moverse_en_cierta_direccion(error_x)
         print_state()
@@ -89,7 +100,17 @@ def centrarse_en_naufrago(mult=0.01):
         print_state()
         cX, cY = get_centroids(get_momentums(mask))
         print(f"cX: {cX}, cY: {cY} ")
-        error_y = (POS_CENTRO_Y - cY) * mult
+        error_y = (POS_CENTRO_Y - 50 - cY) * mult
+        print(f"error_y: {error_y}")
+        moverse_en_cierta_direccion(error_y)
+
+    while error_y >= 0.5:
+        _, mask = mostrar_imagen_ventral_como_yo_quiero()
+        print("centrarse_en_naufrago - EJE Y")
+        print_state()
+        cX, cY = get_centroids(get_momentums(mask))
+        print(f"cX: {cX}, cY: {cY} ")
+        error_y = (POS_CENTRO_Y + 50 - cY) * mult
         print(f"error_y: {error_y}")
         moverse_en_cierta_direccion(error_y)
 
@@ -206,8 +227,9 @@ def ir_al_naufrago(pos, difs_perspectiva):
         print_state()
         print("Yendo al náufrago")
 
-    esperar(5)
+    esperar(1)
     centrarse_en_naufrago()
+    esperar(1)
 
 def ir_al_otro_extremo_del_naufrago():
     im, mask = mostrar_imagen_ventral_como_yo_quiero()
