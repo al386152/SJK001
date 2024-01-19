@@ -69,50 +69,20 @@ def get_centroids(M):
     return cX, cY
 
 
-def centrarse_en_naufrago(mult=0.01):
-    error_x = 0
-    error_y = 0
-    while error_x >= 0.5:
-        print("centrarse_en_naufrago - EJE X")
-        _, mask = mostrar_imagen_ventral_como_yo_quiero()
-        cX, cY = get_centroids(get_momentums(mask))
-        print(f"cX: {cX}, cY: {cY} ")
+def centrarse_en_naufrago(difs_perspectiva, mult=0.01):
 
-        error_x = (POS_CENTRO_X - 32 - cX) * mult
-        print(f"error_x: {error_x}")
-        moverse_en_cierta_direccion(error_x)
+    _, mask = mostrar_imagen_ventral_como_yo_quiero()
+    posiciones_naufragos = pixels_a_coordenadas_aprox(get_posiciones_naufragos(mask), difs_perspectiva,
+                                                      HAL.get_position())
+
+    x, y, yaw = posiciones_naufragos[0]
+
+    while not is_in_position(x, y, ALTURA_SEGUNDA_FOTO):
+        mostrar_imagen_ventral_como_yo_quiero()
+        mover_posicion_respecto_barco(x, y, ALTURA_SEGUNDA_FOTO, 0)
         print_state()
+        print("Yendo al náufrago")
 
-    while error_x >= 0.5:
-        print("centrarse_en_naufrago - EJE X")
-        _, mask = mostrar_imagen_ventral_como_yo_quiero()
-        cX, cY = get_centroids(get_momentums(mask))
-        print(f"cX: {cX}, cY: {cY} ")
-
-        error_x = (POS_CENTRO_X + 32 - cX) * mult
-        print(f"error_x: {error_x}")
-        moverse_en_cierta_direccion(error_x)
-        print_state()
-
-    while error_y >= 0.5:
-        _, mask = mostrar_imagen_ventral_como_yo_quiero()
-        print("centrarse_en_naufrago - EJE Y")
-        print_state()
-        cX, cY = get_centroids(get_momentums(mask))
-        print(f"cX: {cX}, cY: {cY} ")
-        error_y = (POS_CENTRO_Y - 50 - cY) * mult
-        print(f"error_y: {error_y}")
-        moverse_en_cierta_direccion(error_y)
-
-    while error_y >= 0.5:
-        _, mask = mostrar_imagen_ventral_como_yo_quiero()
-        print("centrarse_en_naufrago - EJE Y")
-        print_state()
-        cX, cY = get_centroids(get_momentums(mask))
-        print(f"cX: {cX}, cY: {cY} ")
-        error_y = (POS_CENTRO_Y + 50 - cY) * mult
-        print(f"error_y: {error_y}")
-        moverse_en_cierta_direccion(error_y)
 
 def moverse_a_la_zona_del_rescate():
     # Posición obtenida de forma heurística
@@ -227,9 +197,7 @@ def ir_al_naufrago(pos, difs_perspectiva):
         print_state()
         print("Yendo al náufrago")
 
-    esperar(1)
-    centrarse_en_naufrago()
-    esperar(1)
+    centrarse_en_naufrago(difs_perspectiva)
 
 def ir_al_otro_extremo_del_naufrago():
     im, mask = mostrar_imagen_ventral_como_yo_quiero()
@@ -247,8 +215,6 @@ def test_movimiento():
     mostrar_imagen_ventral_como_yo_quiero()
     mover_posicion_respecto_barco(15, -15, 5, 0)
     print(f"test: {HAL.get_position()}")
-    esperar(5)
-
 
     while not is_in_position(X_RESCATE, Y_RESCATE, ALTURA_VUELO, error=1):
         print("test")
